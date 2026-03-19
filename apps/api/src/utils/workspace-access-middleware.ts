@@ -16,6 +16,7 @@ type WorkspaceIdSource =
         | "label"
         | "timeEntry"
         | "activity"
+        | "comment"
         | "column"
         | "workflowRule";
       idKey: string;
@@ -85,6 +86,7 @@ async function lookupWorkspaceId(
     | "label"
     | "timeEntry"
     | "activity"
+    | "comment"
     | "column"
     | "workflowRule",
   id: string,
@@ -162,6 +164,25 @@ async function lookupWorkspaceId(
         return activity?.workspaceId || null;
       }
 
+      case "comment": {
+        const [comment] = await db
+          .select({
+            workspaceId: schema.projectTable.workspaceId,
+          })
+          .from(schema.commentTable)
+          .innerJoin(
+            schema.taskTable,
+            eq(schema.commentTable.taskId, schema.taskTable.id),
+          )
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.taskTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.commentTable.id, id))
+          .limit(1);
+        return comment?.workspaceId || null;
+      }
+
       case "column": {
         const [column] = await db
           .select({
@@ -197,7 +218,9 @@ async function lookupWorkspaceId(
     }
   } catch (error) {
     console.error(`Error looking up workspaceId for ${resource}:`, error);
-    return null;
+    throw new HTTPException(500, {
+      message: `Failed to resolve workspace access for ${resource}`,
+    });
   }
 }
 
@@ -255,6 +278,14 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "activity", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromComment: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "comment", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

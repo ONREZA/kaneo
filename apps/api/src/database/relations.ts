@@ -5,6 +5,7 @@ import {
   apikeyTable,
   assetTable,
   columnTable,
+  commentTable,
   externalLinkTable,
   githubIntegrationTable,
   integrationTable,
@@ -13,6 +14,7 @@ import {
   notificationTable,
   projectTable,
   sessionTable,
+  taskRelationTable,
   taskTable,
   teamMemberTable,
   teamTable,
@@ -33,6 +35,7 @@ export const userTableRelations = relations(userTable, ({ many }) => ({
   assignedTasks: many(taskTable),
   timeEntries: many(timeEntryTable),
   activities: many(activityTable),
+  comments: many(commentTable),
   assets: many(assetTable),
   notifications: many(notificationTable),
   sentInvitations: many(invitationTable),
@@ -137,9 +140,12 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   }),
   timeEntries: many(timeEntryTable),
   activities: many(activityTable),
+  comments: many(commentTable),
   assets: many(assetTable),
   labels: many(labelTable),
   externalLinks: many(externalLinkTable),
+  sourceRelations: many(taskRelationTable, { relationName: "sourceTask" }),
+  targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
 }));
 
 export const timeEntryTableRelations = relations(timeEntryTable, ({ one }) => ({
@@ -268,6 +274,22 @@ export const integrationTableRelations = relations(
   }),
 );
 
+export const taskRelationTableRelations = relations(
+  taskRelationTable,
+  ({ one }) => ({
+    sourceTask: one(taskTable, {
+      fields: [taskRelationTable.sourceTaskId],
+      references: [taskTable.id],
+      relationName: "sourceTask",
+    }),
+    targetTask: one(taskTable, {
+      fields: [taskRelationTable.targetTaskId],
+      references: [taskTable.id],
+      relationName: "targetTask",
+    }),
+  }),
+);
+
 export const externalLinkTableRelations = relations(
   externalLinkTable,
   ({ one }) => ({
@@ -281,3 +303,14 @@ export const externalLinkTableRelations = relations(
     }),
   }),
 );
+
+export const commentTableRelations = relations(commentTable, ({ one }) => ({
+  task: one(taskTable, {
+    fields: [commentTable.taskId],
+    references: [taskTable.id],
+  }),
+  user: one(userTable, {
+    fields: [commentTable.userId],
+    references: [userTable.id],
+  }),
+}));
