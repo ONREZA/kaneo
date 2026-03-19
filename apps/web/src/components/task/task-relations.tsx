@@ -22,7 +22,6 @@ import {
   DialogHeader,
   DialogPopup,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useCreateTaskRelation from "@/hooks/mutations/task-relation/use-create-task-relation";
@@ -165,7 +164,7 @@ export default function TaskRelations({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
@@ -186,12 +185,64 @@ export default function TaskRelations({
             )}
           </Button>
         </CollapsibleTrigger>
+      </div>
+
+      <CollapsibleContent>
+        {Object.entries(groupedRelations).map(([type, items]) => (
+          <div key={type} className="mt-2">
+            <p className="text-xs font-medium text-muted-foreground px-2 mb-1">
+              {relationTypeLabels[type] || type}
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-accent/50 transition-colors"
+                >
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                    onClick={() => handleNavigateToTask(item.task.id)}
+                  >
+                    {getColumnIcon(item.task.status, false)}
+                    <span className="text-sm truncate flex-1 text-foreground/90">
+                      {item.task.title}
+                    </span>
+                    {item.task.number != null && (
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        #{item.task.number}
+                      </span>
+                    )}
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground h-5 w-5 p-0"
+                    onClick={() => handleRemoveRelation(item.id)}
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {!hasRelations && (
+          <p className="text-xs text-muted-foreground px-2 py-1">
+            No related tasks
+          </p>
+        )}
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="xs" className="text-muted-foreground">
-              <Plus className="size-3.5" />
-            </Button>
-          </DialogTrigger>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 mt-2 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="size-3" />
+            <span>Link task</span>
+          </button>
           <DialogPopup className="max-w-md">
             <DialogHeader>
               <DialogTitle>Link task</DialogTitle>
@@ -268,54 +319,6 @@ export default function TaskRelations({
             </DialogFooter>
           </DialogPopup>
         </Dialog>
-      </div>
-
-      <CollapsibleContent>
-        {Object.entries(groupedRelations).map(([type, items]) => (
-          <div key={type} className="mt-2">
-            <p className="text-xs font-medium text-muted-foreground px-2 mb-1">
-              {relationTypeLabels[type] || type}
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="group flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-accent/50 transition-colors"
-                >
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 flex-1 min-w-0 text-left"
-                    onClick={() => handleNavigateToTask(item.task.id)}
-                  >
-                    {getColumnIcon(item.task.status, false)}
-                    <span className="text-sm truncate flex-1 text-foreground/90">
-                      {item.task.title}
-                    </span>
-                    {item.task.number != null && (
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        #{item.task.number}
-                      </span>
-                    )}
-                  </button>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground h-5 w-5 p-0"
-                    onClick={() => handleRemoveRelation(item.id)}
-                  >
-                    <X className="size-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {!hasRelations && (
-          <p className="text-xs text-muted-foreground px-2 py-1">
-            No related tasks
-          </p>
-        )}
       </CollapsibleContent>
     </Collapsible>
   );

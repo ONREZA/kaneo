@@ -51,6 +51,7 @@ type CreateTaskModalProps = {
   open: boolean;
   onClose: () => void;
   status?: string;
+  onTaskCreated?: (taskId: string) => void;
 };
 
 type Priority = "no-priority" | "low" | "medium" | "high" | "urgent";
@@ -145,7 +146,12 @@ const labelColors = [
   },
 ];
 
-function CreateTaskModal({ open, onClose, status }: CreateTaskModalProps) {
+function CreateTaskModal({
+  open,
+  onClose,
+  status,
+  onTaskCreated,
+}: CreateTaskModalProps) {
   const { project, setProject } = useProjectStore();
   const { data: workspace } = useActiveWorkspace();
   const { mutateAsync: createLabel } = useCreateLabel();
@@ -376,6 +382,7 @@ function CreateTaskModal({ open, onClose, status }: CreateTaskModalProps) {
 
       setDraftTask(savedTask);
       syncTaskIntoProject(savedTask);
+      onTaskCreated?.(savedTask.id);
       toast.success(
         draftTask ? "Task updated successfully" : "Task created successfully",
       );
